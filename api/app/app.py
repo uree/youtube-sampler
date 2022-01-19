@@ -143,11 +143,12 @@ def segment():
 def get_results(task_id=None):
     print("--- result init ---")
     task = ytsampler.AsyncResult(task_id)
+    print("task result: ", task.result)
     # add download/
     if isinstance(task.result, list):
         result = [url_for('download', path=n) for n in task.result]
     else:
-        result = url_for('download', path=n)
+        result = url_for('download', path=task.result)
 
     data = {'message': 'Task completed successfully. To download files use the links provided', 'code': 'SUCCESS', 'download': result}
 
