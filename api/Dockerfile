@@ -10,7 +10,7 @@ WORKDIR /app
 ADD . /app
 
 # Install the dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r --ignore-installed requirements.txt
 
 # Run the command to start gunicorn
 CMD ["gunicorn", "app:app", "-b", "0.0.0.0:420", "-t 90"]
