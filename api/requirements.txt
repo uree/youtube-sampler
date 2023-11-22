@@ -21,12 +21,12 @@ prompt-toolkit==3.0.16
 pydub==0.24.1
 pytz==2021.1
 redis==3.5.3
-requests==2.25.1
+requests
 six==1.15.0
 typing-extensions==3.7.4.3
-urllib3==1.26.3
+urllib3
 vine==5.0.0
 wcwidth==0.2.5
 Werkzeug==1.0.1
-youtube-dl==2021.2.10
+yt-dlp==2023.11.16
 zipp==3.4.0

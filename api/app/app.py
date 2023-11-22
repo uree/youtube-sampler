@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # python 3.6.9
 
-from flask import Flask, url_for, redirect, request, send_file, after_this_request, make_response
+from flask import Flask, url_for, redirect, request, send_file, after_this_request, make_response, render_template
 from celery import Celery
-import youtube_dl
+import yt_dlp
 import ffmpeg
 from pydub import AudioSegment
 from pydub.utils import make_chunks
@@ -35,7 +35,10 @@ ydl_opts = {
 
 
 def segment_audio(temppath, fname, segment_len, outname):
-    print("--- segment audio init ---")
+    """
+    Split autio file into segments and delete original audio file.
+    """
+
     audio = AudioSegment.from_file(temppath+fname)
     segments = make_chunks(audio, int(segment_len))
 
@@ -52,7 +55,9 @@ def segment_audio(temppath, fname, segment_len, outname):
     return segnames
 
 def cut_audio(temppath, fname, start, end, outname):
-    print("--- cut audio init ---")
+    """
+    Cut segment from and audio file an delete the original audio file.
+    """
 
     audio = AudioSegment.from_file(temppath+fname)
     sample = audio[int(start):int(end)]
@@ -60,90 +65,89 @@ def cut_audio(temppath, fname, start, end, outname):
     sample.export(sample_path, format="mp3")
 
     # delete whole audio
-    print("removing ", temppath+fname)
     os.remove(temppath+fname)
-
-    return sample_path
-
-
-def ytsampler_raw(url, ydl_opts, start=None, end=None,  segment_len=0, segment=False):
-    print("--- ytsampler_raw init ---")
-
-    task_id = "somesome"
-    temppath = 'files/'+task_id+'/'
-    filename = 'download.mp3'
-    ydl_opts['outtmpl'] = temppath+filename
-
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
-        title = info_dict.get('title', 'johnaudidoe')
-
-
-    if segment:
-        sample_path = segment_audio(temppath, filename, segment_len, outname=title)
-    else:
-        sample_path = cut_audio(temppath, filename, start, end, outname=title)
 
     return sample_path
 
 
 @celery.task(name="app.app.ytsampler", bind=True)
 def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
-    print("--- ytsampler init ---")
+    """
+    Download the youtube video/audio and call the postporcessing functions (to convert and segment or cut the audio).
+    """
 
     task_id = self.request.id
-    print("task id", task_id)
     temppath = 'files/'+task_id+'/'
     filename = 'download.mp3'
-    ydl_opts['outtmpl'] = temppath+filename
+    ydl_opts['outtmpl'] = temppath+'download'
 
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download=True)
         title = info_dict.get('title', 'johnaudidoe')
 
     if segment:
-        print("segment")
         sample_path = segment_audio(temppath, filename, segment_len, outname=title)
     else:
-        print("extract/cut")
         sample_path = cut_audio(temppath, filename, start, end, outname=title)
 
     return sample_path
 
-#http://localhost:420/extract?url=https://www.youtube.com/watch?v=ThvESdCX8QM&start=1000&end=5000
-@app.route('/extract')
+@app.route('/interface')
+def interface_index():
+    """
+    Serve simple interface to interact with the API endpoints.
+    """
+    return render_template("index.html")
+
+
+@app.route('/extract', methods=["GET", "POST"])
 def extract():
-    print("--- init extract ---")
-    url = request.args.get('url')
-    start = request.args.get('start')
-    end = request.args.get('end')
+    """
+    Start a celery task to extract a clip based on the start and end parameters.
+    """
+    if request.method == "GET":
+        url = request.args.get('url')
+        start = request.args.get('start')
+        end = request.args.get('end')
 
-    #audio = ytsampler_raw(url, ydl_opts, start=start, end=end)
-    audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
+        audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
-    return redirect(url_for('taskstatus', task_id=audio.id))
+        check_url = url_for('taskstatus', task_id=audio.id)
 
-#http://localhost:420/segment?url=https://www.youtube.com/watch?v=ThvESdCX8QM&segment_len=60000
+        return redirect(check_url)
+
+    if request.method == "POST":
+        url = request.form.get('url')
+        start = request.form.get('start')
+        end = request.form.get('end')
+
+        audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
+
+        return render_template("check_status.html", task_id=audio.id, html=True)
+
+
 @app.route('/segment')
 def segment():
-    print("--- init segment ---")
+    """
+    Start the celery task to segment an audio file into ... segments.
+    """
+
     url = request.args.get('url')
     segment_len = request.args.get('segment_len')
-    print(segment_len)
 
-    # audio = ytsampler_raw(url, ydl_opts, segment_len=segment_len, segment=True)
     audio = ytsampler.apply_async(args=[url, ydl_opts, None, None], kwargs={'segment_len': segment_len, 'segment': True})
 
-    # data = {'message': 'Task started successfully. To check status/get results go to url in status.', 'code': 'SUCCESS', 'status': url_for('status', task_id=audio.id)}
-    # return make_response(data, 200)
     return redirect(url_for('taskstatus', task_id=audio.id))
 
 
-@app.route('/result/<task_id>')
-def get_results(task_id=None):
-    print("--- result init ---")
+@app.route('/result')
+def get_results():
+    """
+    Get results of a completed task.
+    """
+    task_id = request.args.get("task_id")
+
     task = ytsampler.AsyncResult(task_id)
-    print("task result: ", task.result)
     # add download/
     if isinstance(task.result, list):
         result = [url_for('download', path=n) for n in task.result]
@@ -154,25 +158,40 @@ def get_results(task_id=None):
 
     return make_response(data, 200)
 
-@app.route('/status/<task_id>')
-def taskstatus(task_id=None):
-    print("--- taskstatus init ---")
+
+@app.route('/status')
+def taskstatus():
+    """
+    Check celery task status.
+    """
+    task_id = request.args.get("task_id")
+    html = request.args.get("html", False)
+
     task = ytsampler.AsyncResult(task_id)
-    print(task.state)
 
-    if task.state != "SUCCESS":
-        response = {
-            'state': task.state,
-        }
-        return make_response(response, 500)
+    if html:
+        if task.state == "PENDING":
+            return render_template("check_status.html", task_id=task_id)
+        elif task.state == "FAILURE":
+            return "FAILURE"
+        elif task.state == "SUCCESS":
+            dl_url = url_for('download', path=task.result)
+            return "<a href='"+dl_url+"'>Download</a>"
     else:
-        return redirect(url_for('get_results', task_id=task_id))
-
+        if task.state != "SUCCESS":
+            response = {
+                'state': task.state,
+            }
+            return make_response(response, 500)
+        else:
+            return redirect(url_for('get_results', task_id=task_id))
 
 
 @app.route('/download/<path:path>')
 def download(path):
-    print("--- init download ---")
+    """
+    Download a file.
+    """
     spl = path.rsplit("/", 1)
     fname = spl[-1]
     folder = spl[0]
@@ -192,7 +211,6 @@ def download(path):
 
     return send_file(return_data, mimetype='audio/mpeg',
                      attachment_filename=fname, as_attachment=True)
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=420, debug=True)

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>YT sampler</title>
+    <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+    <style media="screen">
+      input {
+        display: block;
+      }
+      input[name="url"] {
+        min-width: 400px;
+      }
+      #loading {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        -webkit-animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to { -webkit-transform: rotate(360deg); }
+      }
+      @-webkit-keyframes spin {
+        to { -webkit-transform: rotate(360deg); }
+      }
+      .status {
+        background: black;
+        width: 100px;
+        height: 100px;
+      }
+      .status > img {
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello.</h1>
+    <div id="form">
+      <form class="mainform" hx-post="{{ url_for('extract') }}">
+        <label for="url">URL</label>
+        <input type="text" name="url" value="">
+
+        <label for="start">Start</label>
+        <input type="text" name="start" value="" placeholder="in ms">
+
+        <label for="end">End</label>
+        <input type="text" name="end" value="" placeholder="in ms">
+
+        <button type="submit" name="button">Get it</button>
+      </form>
+    </div>
+    <div id="results">
+
+    </div>
+  </body>
+</html>
