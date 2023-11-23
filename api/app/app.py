@@ -54,6 +54,7 @@ def segment_audio(temppath, fname, segment_len, outname):
 
     return segnames
 
+
 def cut_audio(temppath, fname, start, end, outname):
     """
     Cut segment from and audio file an delete the original audio file.
@@ -91,6 +92,7 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
         sample_path = cut_audio(temppath, filename, start, end, outname=title)
 
     return sample_path
+
 
 @app.route('/interface')
 def interface_index():
@@ -222,6 +224,7 @@ def download(path):
 
     return send_file(return_data, mimetype='audio/mpeg',
                      attachment_filename=fname, as_attachment=True)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=420, debug=True)
