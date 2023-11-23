@@ -5,57 +5,238 @@
     <title>YT sampler</title>
     <script src="https://unpkg.com/htmx.org@1.9.8"></script>
     <style media="screen">
+      body {
+        background: lightblue;
+      }
+      #app {
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
       input {
         display: block;
+        margin: 1rem 0 1rem 0;
+        line-height: 1.5rem;
+        padding: 3px;
       }
       input[name="url"] {
         min-width: 400px;
       }
-      #loading {
-        display: inline-block;
-        width: 50px;
-        height: 50px;
-        border: 3px solid rgba(255,255,255,.3);
-        border-radius: 50%;
-        border-top-color: #fff;
-        animation: spin 1s ease-in-out infinite;
-        -webkit-animation: spin 1s ease-in-out infinite;
+      .buttons {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 2rem;
       }
-
-      @keyframes spin {
-        to { -webkit-transform: rotate(360deg); }
-      }
-      @-webkit-keyframes spin {
-        to { -webkit-transform: rotate(360deg); }
+      .buttons button {
+        line-height: 1.5rem;
       }
       .status {
-        background: black;
-        width: 100px;
-        height: 100px;
+        width: 100%;
+        height: auto;
+        text-align: center;
+        margin-top: 3rem;
       }
       .status > img {
         margin: auto;
+        height: 200px;
+      }
+      .debug {
+        margin-top: 100px;
+        /* display: none; */
       }
     </style>
   </head>
   <body>
-    <h1>Hello.</h1>
-    <div id="form">
-      <form class="mainform" hx-post="{{ url_for('extract') }}">
-        <label for="url">URL</label>
-        <input type="text" name="url" value="">
+    <div id="app">
+      <h1>Hello sample person.</h1>
 
-        <label for="start">Start</label>
-        <input type="text" name="start" value="" placeholder="in ms">
+      <div v-if="this.form.url" id="player"></div>
+      <div v-else class="message">
+        <p>Please enter url.</p>
+      </div>
 
-        <label for="end">End</label>
-        <input type="text" name="end" value="" placeholder="in ms">
+      <div id="form">
+        <form
+          class="mainform"
+          hx-post="{{ url_for('extract') }}"
+          hx-params="url,start,end"
+        >
+          <input
+            type="text"
+            name="url"
+            v-model="form.url"
+            placeholder="youtube URL"
+          >
+          <span class="error" v-if="errors.validUrl != 1">Must be a valid youtube url.</span>
 
-        <button type="submit" name="button">Get it</button>
-      </form>
+          <input
+            type="number"
+            step="0.1"
+            name="start-og"
+            v-model="form.start"
+            placeholder="start time (in seconds)"
+          >
+          <input
+            type="hidden"
+            name="start"
+            :value=startInMs
+          >
+
+          <input
+            type="number"
+            step="0.1"
+            name="end-og"
+            v-model="form.end"
+            placeholder="end time (in seconds)"
+          >
+          <span class="error" v-if="errors.validEnd != 1">End value must be larger than start value.</span>
+          <input
+            type="hidden"
+            name="end"
+            :value=endInMs
+          >
+
+          <div class="buttons">
+            <button
+              type="button"
+              name="button"
+              @click="createYtPlayer()"
+            >(Re)load preview</button>
+
+            <button
+              type="submit"
+              name="button"
+              :disabled="readyToPostToAPI === 0"
+            >Get audio file</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="results">
+      </div>
+
+      <div class="debug">
+        <code>
+          Debug <br>
+          ----- <br>
+          Url: [[ form.url ]] <br>
+          Start: [[ form.start ]] <br>
+          End: [[ form.end ]] <br>
+          Id: [[ videoId ]] <br>
+          ready: [[ readyToPostToAPI ]] <br>
+        </code>
+      </div>
     </div>
-    <div id="results">
 
-    </div>
+    <script type="module">
+      import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+      const vueApp = createApp({
+        data() {
+          return {
+            form: {
+              url: null, //https://www.youtube.com/watch?v=1GVvathFQgM
+              start: null,
+              end: null,
+            },
+            ytplayer: null,
+            errors: {
+              validUrl: 1,
+              validEnd: 1,
+            }
+          }
+        },
+        delimiters: ['[[', ']]'],
+        computed: {
+          videoId () {
+            if (this.form.url) {
+              try {
+                const urlParams = new URL(this.form.url)
+                return urlParams.searchParams.get('v')
+              } catch (e) {
+                return ''
+              }
+            }
+            return ''
+          },
+          readyToPostToAPI() {
+            if (this.form.url !== null && this.form.start !== null && this.form.end !== null) {
+
+              if (!this.form.url.startsWith("https://www.youtube.com")) {
+                this.errors.validUrl = 0
+                return 0
+              } else {
+                this.errors.validUrl = 1
+              }
+
+              if (this.form.start >= this.form.end) {
+                this.errors.validEnd = 0
+                return 0
+              } else {
+                this.errors.validEnd = 1
+              }
+              return 1
+            } else {
+              return 0
+            }
+          },
+          startInMs() {
+            return this.form.start*1000
+          },
+          endInMs() {
+            return this.form.end*1000
+          }
+        },
+        mounted() {
+          var tag = document.createElement('script');
+
+          tag.src = "https://www.youtube.com/iframe_api";
+          var firstScriptTag = document.getElementsByTagName('script')[0];
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        },
+        methods: {
+          onPlayerReady(event) {
+           event.target.seekTo(this.form.start);
+           event.target.playVideo();
+          },
+          onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING) {
+              var duration = this.form.end - this.form.start;
+              setTimeout(this.restartVideoSection, duration * 1000);
+            }
+          },
+          restartVideoSection() {
+            this.ytplayer.seekTo(this.form.start);
+          },
+          restartWithNewUrl() {
+            console.log("new url")
+            this.ytplayer.loadVideoById(this.videoId)
+            console.log(this.videoId)
+          },
+          createYtPlayer() {
+            if (this.ytplayer !== null) {
+              this.restartWithNewUrl()
+            } else {
+              this.ytplayer = new YT.Player('player', {
+                height: '390',
+                width: '640',
+                videoId: this.videoId,
+                playerVars: {
+                  'playsinline': 1
+                },
+                events: {
+                  'onReady': this.onPlayerReady,
+                  'onStateChange': this.onPlayerStateChange
+                }
+              });
+            }
+          }
+        }
+      })
+
+      vueApp.mount('#app')
+    </script>
+
+
   </body>
 </html>

@@ -117,13 +117,24 @@ def extract():
         return redirect(check_url)
 
     if request.method == "POST":
-        url = request.form.get('url')
-        start = request.form.get('start')
-        end = request.form.get('end')
+        if request.form:
+            url = request.form.get('url')
+            start = request.form.get('start')
+            end = request.form.get('end')
 
-        audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
+            audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
-        return render_template("check_status.html", task_id=audio.id, html=True)
+            return render_template("check_status.html", task_id=audio.id, html=True)
+
+        if request.headers['content type'] == "application/json":
+            data = request.get_json()
+            url = data['url']
+            start = data['start']
+            end = data['end']
+
+            audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
+
+            return {"status_url": url_for('taskstatus', task_id=audio.id)}
 
 
 @app.route('/segment')
@@ -176,7 +187,7 @@ def taskstatus():
             return "FAILURE"
         elif task.state == "SUCCESS":
             dl_url = url_for('download', path=task.result)
-            return "<a href='"+dl_url+"'>Download</a>"
+            return render_template("result.html", dl_url=dl_url)
     else:
         if task.state != "SUCCESS":
             response = {
