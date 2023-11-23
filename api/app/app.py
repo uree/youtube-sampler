@@ -134,20 +134,19 @@ def extract():
         return redirect(check_url)
 
     if request.method == "POST":
-        if request.form:
-            url = request.form.get('url')
-            start = request.form.get('start')
-            end = request.form.get('end')
+        url = request.form.get('url')
+        start = request.form.get('start')
+        end = request.form.get('end')
 
-            yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
-            is_valid_link = yt_extractor.suitable(url)
+        yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
+        is_valid_link = yt_extractor.suitable(url)
 
-            if not is_valid_link:
-                return render_template("failure.html", message="Invalid url.")
+        if not is_valid_link:
+            return render_template("failure.html", message="Invalid url.")
 
-            audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
+        audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
-            return render_template("check_status.html", task_id=audio.id, html=True)
+        return render_template("check_status.html", task_id=audio.id, html=True)
 
 
 @app.route('/segment')
