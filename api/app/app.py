@@ -33,6 +33,7 @@ ydl_opts = {
     }]
 }
 
+logging.basicConfig(filename='logs/main.log', level=logging.DEBUG)
 
 def segment_audio(temppath, fname, segment_len, outname):
     """
@@ -83,7 +84,13 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
     ydl_opts['outtmpl'] = temppath+'download'
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
+        try:
+            info_dict = ydl.extract_info(url, download=True)
+        except Exception as e:
+            app.logger.error('yt_dlp failure with the following url: {}'.format(url))
+            app.logger.error(repr(e))
+            return False
+
         title = info_dict.get('title', 'johnaudidoe')
 
     if segment:
@@ -107,10 +114,18 @@ def extract():
     """
     Start a celery task to extract a clip based on the start and end parameters.
     """
+
     if request.method == "GET":
         url = request.args.get('url')
         start = request.args.get('start')
         end = request.args.get('end')
+
+        yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
+        is_valid_link = yt_extractor.suitable(url)
+
+        if not is_valid_link:
+            app.logger.debug("Invalid url: {}".format(url))
+            return make_response({"error": "Invalid url."}, 400)
 
         audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
@@ -124,19 +139,15 @@ def extract():
             start = request.form.get('start')
             end = request.form.get('end')
 
+            yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
+            is_valid_link = yt_extractor.suitable(url)
+
+            if not is_valid_link:
+                return render_template("failure.html", message="Invalid url.")
+
             audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
             return render_template("check_status.html", task_id=audio.id, html=True)
-
-        if request.headers['content type'] == "application/json":
-            data = request.get_json()
-            url = data['url']
-            start = data['start']
-            end = data['end']
-
-            audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
-
-            return {"status_url": url_for('taskstatus', task_id=audio.id)}
 
 
 @app.route('/segment')
@@ -153,26 +164,7 @@ def segment():
     return redirect(url_for('taskstatus', task_id=audio.id))
 
 
-@app.route('/result')
-def get_results():
-    """
-    Get results of a completed task.
-    """
-    task_id = request.args.get("task_id")
-
-    task = ytsampler.AsyncResult(task_id)
-    # add download/
-    if isinstance(task.result, list):
-        result = [url_for('download', path=n) for n in task.result]
-    else:
-        result = url_for('download', path=task.result)
-
-    data = {'message': 'Task completed successfully. To download files use the links provided', 'code': 'SUCCESS', 'download': result}
-
-    return make_response(data, 200)
-
-
-@app.route('/status')
+@app.route('/status', methods=['GET'])
 def taskstatus():
     """
     Check celery task status.
@@ -180,24 +172,46 @@ def taskstatus():
     task_id = request.args.get("task_id")
     html = request.args.get("html", False)
 
+    response = {
+        "state": None,
+        "message": None,
+        "download_urls": None
+    }
+
+    if not task_id:
+        response["message"] = "Missing request argument `task_id`."
+        return make_response(response, 400)
+
     task = ytsampler.AsyncResult(task_id)
 
     if html:
         if task.state == "PENDING":
             return render_template("check_status.html", task_id=task_id)
         elif task.state == "FAILURE":
-            return "FAILURE"
+            return render_template("failure.html")
         elif task.state == "SUCCESS":
             dl_url = url_for('download', path=task.result)
             return render_template("result.html", dl_url=dl_url)
     else:
-        if task.state != "SUCCESS":
-            response = {
-                'state': task.state,
-            }
-            return make_response(response, 500)
-        else:
-            return redirect(url_for('get_results', task_id=task_id))
+        response["state"] = task.state
+
+        if task.state == "PENDING":
+            response["message"] = "Task still in progress."
+            return make_response(response, 200)
+
+        elif task.state == "SUCCESS":
+            if isinstance(task.result, list):
+                result = [url_for('download', path=n) for n in task.result]
+            else:
+                result = url_for('download', path=task.result)
+
+            response["download_urls"] = result
+            return make_response(response, 200)
+
+        elif task.state == "FAILURE":
+            app.logger.error(task.result)
+            response["message"] = "Something went wrong."
+            return make_response(response)
 
 
 @app.route('/download/<path:path>')
