@@ -35,6 +35,7 @@ ydl_opts = {
 
 logging.basicConfig(filename='logs/main.log', level=logging.DEBUG)
 
+
 def segment_audio(temppath, fname, segment_len, outname):
     """
     Split autio file into segments and delete original audio file.
@@ -116,9 +117,12 @@ def extract():
     """
 
     if request.method == "GET":
-        url = request.args.get('url')
-        start = request.args.get('start')
-        end = request.args.get('end')
+        url = request.args.get('url', None)
+        start = request.args.get('start', None)
+        end = request.args.get('end', None)
+
+        if None in (url, start, end):
+            return make_response({"error": "Missing parameter. Provide url, start and end."})
 
         yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
         is_valid_link = yt_extractor.suitable(url)
@@ -134,9 +138,12 @@ def extract():
         return redirect(check_url)
 
     if request.method == "POST":
-        url = request.form.get('url')
-        start = request.form.get('start')
-        end = request.form.get('end')
+        url = request.form.get('url', None)
+        start = request.form.get('start', None)
+        end = request.form.get('end', None)
+
+        if None in (url, start, end):
+            return render_template("failure.html", message="Missing parameter. Provide url, start and end.")
 
         yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
         is_valid_link = yt_extractor.suitable(url)
@@ -187,6 +194,7 @@ def taskstatus():
         if task.state == "PENDING":
             return render_template("check_status.html", task_id=task_id)
         elif task.state == "FAILURE":
+            app.logger.error(task.result)
             return render_template("failure.html")
         elif task.state == "SUCCESS":
             dl_url = url_for('download', path=task.result)
