@@ -7,3 +7,5 @@ rsync-exclude.txt
 sync.sh
 api/app/files/*
 api/app/logs/*
+venv/
+files/*

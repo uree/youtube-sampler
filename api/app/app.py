@@ -25,7 +25,7 @@ celery.conf.update(app.config)
 
 ydl_opts = {
     'format': '140',
-    'outtmpl': 'files/default/',
+    'paths': 'files/',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
@@ -36,39 +36,46 @@ ydl_opts = {
 logging.basicConfig(filename='logs/main.log', level=logging.DEBUG)
 
 
-def segment_audio(temppath, fname, segment_len, outname):
+def segment_audio(filepath segment_len, outname):
     """
     Split autio file into segments and delete original audio file.
     """
 
-    audio = AudioSegment.from_file(temppath+fname)
+    audio = AudioSegment.from_file(filepath)
     segments = make_chunks(audio, int(segment_len))
 
     segnames = []
 
     for i, seg in enumerate(segments):
-        segname = temppath+outname+"_segment{0}.mp3".format(i)
+        segname = filepath[:-4]"_segment{0}.mp3".format(i)
         seg.export(segname, format="mp3")
         segnames.append(segname)
 
     # delete whole audio
-    os.remove(temppath+fname)
+    os.remove(filepath)
 
     return segnames
 
 
-def cut_audio(temppath, fname, start, end, outname):
+def cut_audio(filepath, start, end, outname):
     """
     Cut segment from and audio file an delete the original audio file.
     """
 
-    audio = AudioSegment.from_file(temppath+fname)
+    try:
+        audio = AudioSegment.from_file(filepath)
+    except Exception as e:
+        app.logger.error(f"Failure segmenting audio: {e}")
+
     sample = audio[int(start):int(end)]
-    sample_path = temppath+outname+'_sample.mp3'
-    sample.export(sample_path, format="mp3")
+    sample_path = filepath[:-4]+'_sample.mp3'
+    try:
+        sample.export(sample_path, format="mp3")
+    except Exception as e:
+        app.logger.error(f"Failure exporting mp3: {e}")
 
     # delete whole audio
-    os.remove(temppath+fname)
+    os.remove(filepath)
 
     return sample_path
 
@@ -81,12 +88,13 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
 
     task_id = self.request.id
     temppath = 'files/'+task_id+'/'
-    filename = 'download.mp3'
-    ydl_opts['outtmpl'] = temppath+'download'
+    ydl_opts['paths'] = {'home': temppath}
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
             info_dict = ydl.extract_info(url, download=True)
+            app.logger.debug(info_dict["requested_downloads"])
+            saved_mp3_path = info_dict["requested_downloads"][0]["filepath"].replace("/app/", "")
         except Exception as e:
             app.logger.error('yt_dlp failure with the following url: {}'.format(url))
             app.logger.error(repr(e))
@@ -95,9 +103,9 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
         title = info_dict.get('title', 'johnaudidoe')
 
     if segment:
-        sample_path = segment_audio(temppath, filename, segment_len, outname=title)
+        sample_path = segment_audio(saved_mp3_path segment_len, outname=title)
     else:
-        sample_path = cut_audio(temppath, filename, start, end, outname=title)
+        sample_path = cut_audio(saved_mp3_path, start, end, outname=title)
 
     return sample_path
 
