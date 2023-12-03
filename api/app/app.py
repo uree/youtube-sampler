@@ -47,7 +47,7 @@ def segment_audio(filepath, segment_len, outname):
     segnames = []
 
     for i, seg in enumerate(segments):
-        segname = filepath[:-4]"_segment{0}.mp3".format(i)
+        segname = filepath[:-4]+"_segment{0}.mp3".format(i)
         seg.export(segname, format="mp3")
         segnames.append(segname)
 
@@ -103,7 +103,7 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
         title = info_dict.get('title', 'johnaudidoe')
 
     if segment:
-        sample_path = segment_audio(saved_mp3_path segment_len, outname=title)
+        sample_path = segment_audio(saved_mp3_path, segment_len, outname=title)
     else:
         sample_path = cut_audio(saved_mp3_path, start, end, outname=title)
 
