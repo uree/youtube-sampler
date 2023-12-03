@@ -36,7 +36,7 @@ ydl_opts = {
 logging.basicConfig(filename='logs/main.log', level=logging.DEBUG)
 
 
-def segment_audio(filepath segment_len, outname):
+def segment_audio(filepath, segment_len, outname):
     """
     Split autio file into segments and delete original audio file.
     """
