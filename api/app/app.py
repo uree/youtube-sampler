@@ -122,7 +122,7 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
     return sample_path
 
 
-@app.route("/interface")
+@app.route("/")
 def interface_index():
     """
     Serve simple interface to interact with the API endpoints.
