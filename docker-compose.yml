@@ -21,7 +21,7 @@ services:
   worker:
     build:
       context: ./api
-    command: celery --app=app.celery worker --loglevel=DEBUG
+    command: celery --app=app.celery worker --loglevel=ERROR -f logs/celery.log
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0

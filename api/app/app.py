@@ -26,8 +26,15 @@ app.config["CELERY_BROKER_URL"] = "redis://redis:6379/0"
 app.config["CELERY_RESULT_BACKEND"] = "redis://redis:6379/0"
 app.config["CELERY_IGNORE_RESULT"] = False
 
-celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
+celery = Celery(
+    app.name,
+    broker=app.config["CELERY_BROKER_URL"]
+)
 celery.conf.update(app.config)
+
+app.logger.setLevel(logging.DEBUG)
+logging.basicConfig(filename="logs/main.log",
+                    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")  # noqa: E501
 
 ydl_opts = {
     "format": "140",
@@ -40,10 +47,6 @@ ydl_opts = {
         }
     ],
 }
-
-logging.basicConfig(filename="logs/main.log",
-                    level=logging.ERROR,
-                    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")  # noqa: E501
 
 
 def segment_audio(filepath, segment_len, outname):
@@ -129,6 +132,9 @@ def interface_index():
     """
     Serve simple interface to interact with the API endpoints.
     """
+    app.logger.info("index info")
+    app.logger.debug("index debug")
+    app.logger.error("index error")
     return render_template("index.html")
 
 
