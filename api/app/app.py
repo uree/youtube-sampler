@@ -1,39 +1,47 @@
 # -*- coding: utf-8 -*-
-# python 3.6.9
 
-from flask import Flask, url_for, redirect, request, send_file, after_this_request, make_response, render_template
+import io
+import logging
+import os
+
 from celery import Celery
-import yt_dlp
-import ffmpeg
+import ffmpeg  # noqa
+from flask import (
+    Flask,
+    url_for,
+    redirect,
+    request,
+    send_file,
+    make_response,
+    render_template,
+)
 from pydub import AudioSegment
 from pydub.utils import make_chunks
-import logging
-import time
-import os
-import io
-from pathlib import Path
+import yt_dlp
 
 
 app = Flask(__name__)
 
-app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
-app.config['CELERY_IGNORE_RESULT'] = False
+app.config["CELERY_BROKER_URL"] = "redis://redis:6379/0"
+app.config["CELERY_RESULT_BACKEND"] = "redis://redis:6379/0"
+app.config["CELERY_IGNORE_RESULT"] = False
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
 celery.conf.update(app.config)
 
 ydl_opts = {
-    'format': '140',
-    'paths': 'files/',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192',
-    }]
+    "format": "140",
+    "paths": "files/",
+    "postprocessors": [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }
+    ],
 }
 
-logging.basicConfig(filename='logs/main.log', level=logging.DEBUG)
+logging.basicConfig(filename="logs/main.log", level=logging.DEBUG)
 
 
 def segment_audio(filepath, segment_len, outname):
@@ -47,7 +55,7 @@ def segment_audio(filepath, segment_len, outname):
     segnames = []
 
     for i, seg in enumerate(segments):
-        segname = filepath[:-4]+"_segment{0}.mp3".format(i)
+        segname = filepath[:-4] + "_segment{0}.mp3".format(i)
         seg.export(segname, format="mp3")
         segnames.append(segname)
 
@@ -67,8 +75,8 @@ def cut_audio(filepath, start, end, outname):
     except Exception as e:
         app.logger.error(f"Failure segmenting audio: {e}")
 
-    sample = audio[int(start):int(end)]
-    sample_path = filepath[:-4]+'_sample.mp3'
+    sample = audio[int(start): int(end)]
+    sample_path = filepath[:-4] + "_sample.mp3"
     try:
         sample.export(sample_path, format="mp3")
     except Exception as e:
@@ -83,24 +91,28 @@ def cut_audio(filepath, start, end, outname):
 @celery.task(name="app.app.ytsampler", bind=True)
 def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
     """
-    Download the youtube video/audio and call the postporcessing functions (to convert and segment or cut the audio).
+    Download the youtube video/audio and call the postporcessing functions
+    (to convert and segment or cut the audio).
     """
 
     task_id = self.request.id
-    temppath = 'files/'+task_id+'/'
-    ydl_opts['paths'] = {'home': temppath}
+    temppath = "files/" + task_id + "/"
+    ydl_opts["paths"] = {"home": temppath}
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
             info_dict = ydl.extract_info(url, download=True)
             app.logger.debug(info_dict["requested_downloads"])
-            saved_mp3_path = info_dict["requested_downloads"][0]["filepath"].replace("/app/", "")
+            saved_mp3_path = info_dict["requested_downloads"][0]["filepath"].replace(  # noqa: E501
+                "/app/", ""
+            )
         except Exception as e:
-            app.logger.error('yt_dlp failure with the following url: {}'.format(url))
+            app.logger.error(
+                "yt_dlp failure with the following url: {}".format(url))
             app.logger.error(repr(e))
             return False
 
-        title = info_dict.get('title', 'johnaudidoe')
+        title = info_dict.get("title", "johnaudidoe")
 
     if segment:
         sample_path = segment_audio(saved_mp3_path, segment_len, outname=title)
@@ -110,7 +122,7 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
     return sample_path
 
 
-@app.route('/interface')
+@app.route("/interface")
 def interface_index():
     """
     Serve simple interface to interact with the API endpoints.
@@ -118,19 +130,21 @@ def interface_index():
     return render_template("index.html")
 
 
-@app.route('/extract', methods=["GET", "POST"])
+@app.route("/extract", methods=["GET", "POST"])
 def extract():
     """
-    Start a celery task to extract a clip based on the start and end parameters.
+    Start a celery task to extract a clip based on the start and end parameters. # noqa: E501
     """
 
     if request.method == "GET":
-        url = request.args.get('url', None)
-        start = request.args.get('start', None)
-        end = request.args.get('end', None)
+        url = request.args.get("url", None)
+        start = request.args.get("start", None)
+        end = request.args.get("end", None)
 
         if None in (url, start, end):
-            return make_response({"error": "Missing parameter. Provide url, start and end."})
+            return make_response(
+                {"error": "Missing parameter. Provide url, start and end."}
+            )
 
         yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
         is_valid_link = yt_extractor.suitable(url)
@@ -141,17 +155,19 @@ def extract():
 
         audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
-        check_url = url_for('taskstatus', task_id=audio.id)
+        check_url = url_for("taskstatus", task_id=audio.id)
 
         return redirect(check_url)
 
     if request.method == "POST":
-        url = request.form.get('url', None)
-        start = request.form.get('start', None)
-        end = request.form.get('end', None)
+        url = request.form.get("url", None)
+        start = request.form.get("start", None)
+        end = request.form.get("end", None)
 
         if None in (url, start, end):
-            return render_template("failure.html", message="Missing parameter. Provide url, start and end.")
+            return render_template(
+                "failure.html", message="Missing parameter. Provide url, start and end."  # noqa: E501
+            )
 
         yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
         is_valid_link = yt_extractor.suitable(url)
@@ -161,24 +177,27 @@ def extract():
 
         audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
 
-        return render_template("check_status.html", task_id=audio.id, html=True)
+        return render_template("check_status.html", task_id=audio.id, html=True)  # noqa: E501
 
 
-@app.route('/segment')
+@app.route("/segment")
 def segment():
     """
     Start the celery task to segment an audio file into ... segments.
     """
 
-    url = request.args.get('url')
-    segment_len = request.args.get('segment_len')
+    url = request.args.get("url")
+    segment_len = request.args.get("segment_len")
 
-    audio = ytsampler.apply_async(args=[url, ydl_opts, None, None], kwargs={'segment_len': segment_len, 'segment': True})
+    audio = ytsampler.apply_async(
+        args=[url, ydl_opts, None, None],
+        kwargs={"segment_len": segment_len, "segment": True},
+    )
 
-    return redirect(url_for('taskstatus', task_id=audio.id))
+    return redirect(url_for("taskstatus", task_id=audio.id))
 
 
-@app.route('/status', methods=['GET'])
+@app.route("/status", methods=["GET"])
 def taskstatus():
     """
     Check celery task status.
@@ -186,11 +205,7 @@ def taskstatus():
     task_id = request.args.get("task_id")
     html = request.args.get("html", False)
 
-    response = {
-        "state": None,
-        "message": None,
-        "download_urls": None
-    }
+    response = {"state": None, "message": None, "download_urls": None}
 
     if not task_id:
         response["message"] = "Missing request argument `task_id`."
@@ -205,7 +220,7 @@ def taskstatus():
             app.logger.error(task.result)
             return render_template("failure.html")
         elif task.state == "SUCCESS":
-            dl_url = url_for('download', path=task.result)
+            dl_url = url_for("download", path=task.result)
             return render_template("result.html", dl_url=dl_url)
     else:
         response["state"] = task.state
@@ -216,9 +231,9 @@ def taskstatus():
 
         elif task.state == "SUCCESS":
             if isinstance(task.result, list):
-                result = [url_for('download', path=n) for n in task.result]
+                result = [url_for("download", path=n) for n in task.result]
             else:
-                result = url_for('download', path=task.result)
+                result = url_for("download", path=task.result)
 
             response["download_urls"] = result
             return make_response(response, 200)
@@ -229,7 +244,7 @@ def taskstatus():
             return make_response(response)
 
 
-@app.route('/download/<path:path>')
+@app.route("/download/<path:path>")
 def download(path):
     """
     Download a file.
@@ -239,7 +254,7 @@ def download(path):
     folder = spl[0]
 
     return_data = io.BytesIO()
-    with open(path, 'rb') as fo:
+    with open(path, "rb") as fo:
         return_data.write(fo.read())
 
     return_data.seek(0)
@@ -248,12 +263,16 @@ def download(path):
 
     try:
         os.rmdir(folder)
-    except:
-        pass
+    except Exception as e:
+        app.logger.error(f"Error removing temp folder: {repr(e)}")
 
-    return send_file(return_data, mimetype='audio/mpeg',
-                     attachment_filename=fname, as_attachment=True)
+    return send_file(
+        return_data,
+        mimetype="audio/mpeg",
+        attachment_filename=fname,
+        as_attachment=True,
+    )
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=420, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=420, debug=True)
