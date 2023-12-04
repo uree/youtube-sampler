@@ -41,7 +41,9 @@ ydl_opts = {
     ],
 }
 
-logging.basicConfig(filename="logs/main.log", level=logging.DEBUG)
+logging.basicConfig(filename="logs/main.log",
+                    level=logging.ERROR,
+                    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")  # noqa: E501
 
 
 def segment_audio(filepath, segment_len, outname):
@@ -173,6 +175,7 @@ def extract():
         is_valid_link = yt_extractor.suitable(url)
 
         if not is_valid_link:
+            app.logger.debug("Invalid url: {}".format(url))
             return render_template("failure.html", message="Invalid url.")
 
         audio = ytsampler.apply_async(args=[url, ydl_opts, start, end])
