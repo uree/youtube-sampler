@@ -2,31 +2,28 @@ version: "3.7"
 
 services:
 
+  redis:
+    image: "redis:alpine"
+
   flask_api:
-    build: ./api
+    build: .
     container_name: youtube_sampler_api
-    restart: always
+    restart: "no"
     environment:
       FLASK_DEBUG: 1
-      FLASK_APP: ./api/app.py
       PYTHONUNBUFFERED: 1
       PYTHONIOENCODING: UTF-8
     volumes:
-      - ./api/app:/app
+      - .:/home/youtube_sampler
     ports:
       - "420:420"
     depends_on:
       - redis
 
   worker:
-    build:
-      context: ./api
-    command: celery --app=app.celery worker --loglevel=ERROR -f logs/celery.log
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    build: .
+    command: celery -A run.celery_app worker --loglevel=INFO -f app/logs/celery.log
     volumes:
-      - ./api/app:/app
-
-  redis:
-    image: "redis:alpine"
+      - .:/home/youtube_sampler
+    depends_on:
+      - redis

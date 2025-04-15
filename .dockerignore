@@ -1,0 +1,6 @@
+__pycache__
+venv
+.git
+sync.sh
+rsync-exclude.txt
+.pytest_cache

@@ -1,0 +1,131 @@
+ERROR:app:ERROR: [generic] Unable to download webpage: <urllib3.connection.HTTPSConnection object at 0x7f513e82d130>: Failed to resolve 'kokakola' ([Errno -3] Try again) (caused by TransportError("<urllib3.connection.HTTPSConnection object at 0x7f513e82d130>: Failed to resolve 'kokakola' ([Errno -3] Try again)"))
+DEBUG:app:Invalid url: https://faskko
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (0/20) now.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (1/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (2/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (3/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (4/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (5/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (6/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (7/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (8/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (9/20) in 1.00 second.
+ERROR:celery.backends.redis:Connection to Redis lost: Retry (10/20) in 1.00 second.
+ERROR:app:[Errno 2] No such file or directory
+ERROR:app:[Errno 2] No such file or directory
+ERROR:app:[Errno 2] No such file or directory
+ERROR:app:local variable 'audio' referenced before assignment
+ERROR:app:local variable 'audio' referenced before assignment
+ERROR:app:local variable 'audio' referenced before assignment
+ERROR:app:local variable 'audio' referenced before assignment
+ERROR:app:name 'filename' is not defined
+INFO:app:hello base
+INFO:app:hello base
+DEBUG:app:hello debug
+ERROR:app:hello error
+INFO:app:hello base
+DEBUG:app:hello debug
+ERROR:app:hello error
+INFO:app:hello base
+DEBUG:app:hello debug
+ERROR:app:hello error
+hello base
+hello debug
+hello error
+2023-12-04 11:04:12,543 - app - INFO - hello base
+2023-12-04 11:04:12,543 - app - DEBUG - hello debug
+2023-12-04 11:04:12,543 - app - ERROR - hello error
+2023-12-04 11:05:17,552 - app - INFO - hello base
+2023-12-04 11:05:17,552 - app - DEBUG - hello debug
+2023-12-04 11:05:17,552 - app - ERROR - hello error
+2023-12-04 11:09:15,479 - app - INFO - hello base
+2023-12-04 11:09:15,480 - app - DEBUG - hello debug
+2023-12-04 11:09:15,480 - app - ERROR - hello error
+2023-12-04 11:09:45,307 - app - INFO - hello base
+2023-12-04 11:09:45,307 - app - DEBUG - hello debug
+2023-12-04 11:09:45,307 - app - ERROR - hello error
+ERROR:app:error
+2023-12-04 14:16:56,318 - app - INFO - info
+2023-12-04 14:16:56,318 - app - DEBUG - debug
+2023-12-04 14:16:56,319 - app - ERROR - error
+2023-12-04 14:17:31,807 - app - INFO - info
+2023-12-04 14:17:31,807 - app - ERROR - error
+2023-12-04 14:20:01,315 - app - INFO - info
+2023-12-04 14:20:01,316 - app - DEBUG - debug
+2023-12-04 14:20:01,316 - app - ERROR - error
+2023-12-04 14:31:35,225 - app - DEBUG - /usr/lib/python3.8/site-packages/celery/platforms.py:796: RuntimeWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(RuntimeWarning(ROOT_DISCOURAGED.format(
+2023-12-04 14:32:17,741 - app - DEBUG - [2023-12-04 14:32:17,741] INFO in app: info
+2023-12-04 14:32:17,741 - app - INFO - info
+2023-12-04 14:32:17,742 - app - DEBUG - [2023-12-04 14:32:17,742] DEBUG in app: debug
+2023-12-04 14:32:17,742 - app - DEBUG - debug
+2023-12-04 14:32:17,742 - app - DEBUG - [2023-12-04 14:32:17,742] ERROR in app: error
+2023-12-04 14:32:17,742 - app - ERROR - error
+2023-12-04 14:34:47,567 - app - DEBUG - [2023-12-04 14:34:47,567] INFO in app: info
+2023-12-04 14:34:47,567 - app - INFO - info
+2023-12-04 14:34:47,568 - app - DEBUG - [2023-12-04 14:34:47,568] DEBUG in app: debug
+2023-12-04 14:34:47,568 - app - DEBUG - debug
+2023-12-04 14:34:47,568 - app - DEBUG - [2023-12-04 14:34:47,568] ERROR in app: error
+2023-12-04 14:34:47,568 - app - ERROR - error
+2023-12-04 14:50:40,476 - app - DEBUG - testlog debug
+2023-12-04 14:50:40,476 - app - DEBUG - 0eb52ebe-2150-4aa6-876b-8e2ea87b726a
+2023-12-04 14:51:54,039 - app - DEBUG - /usr/lib/python3.8/site-packages/celery/platforms.py:796: RuntimeWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(RuntimeWarning(ROOT_DISCOURAGED.format(
+2023-12-04 14:52:08,087 - app - DEBUG - [2023-12-04 14:52:08,087] DEBUG in app: testlog debug
+2023-12-04 14:52:08,087 - app - DEBUG - testlog debug
+2023-12-04 14:52:08,088 - app - DEBUG - [2023-12-04 14:52:08,087] DEBUG in app: 9cc54214-b2d1-4358-8f88-f9321e33a893
+2023-12-04 14:52:08,087 - app - DEBUG - 9cc54214-b2d1-4358-8f88-f9321e33a893
+2023-12-04 15:02:49,354 - app - DEBUG - testlog debug
+2023-12-04 15:02:49,354 - app - DEBUG - d48996ea-9ccd-4937-a626-df113f548d2f
+2023-12-04 15:03:12,013 - app - DEBUG - testlog debug
+2023-12-04 15:03:12,013 - app - DEBUG - 6c2864c5-9289-4734-a780-9516b8149433
+2023-12-04 15:05:34,057 - app - DEBUG - testlog debug
+2023-12-04 15:05:34,058 - app - DEBUG - 2671823a-5862-4371-b9d7-facf546bd668
+2023-12-04 15:16:06,642 - app - DEBUG - testlog debug
+2023-12-04 15:16:06,642 - app - DEBUG - 82000f1d-0714-4a66-83d6-ed125939ad3e
+2023-12-06 15:09:57,963 - werkzeug - INFO -  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2023-12-06 15:09:57,964 - werkzeug - INFO -  * Restarting with stat
+2023-12-06 15:09:58,458 - werkzeug - WARNING -  * Debugger is active!
+2023-12-06 15:09:58,476 - werkzeug - INFO -  * Debugger PIN: 148-402-697
+2023-12-06 15:12:57,105 - app - INFO - index info
+2023-12-06 15:12:57,105 - app - DEBUG - index debug
+2023-12-06 15:12:57,106 - app - ERROR - index error
+2023-12-06 15:15:26,229 - app - INFO - index info
+2023-12-06 15:15:26,229 - app - DEBUG - index debug
+2023-12-06 15:15:26,230 - app - ERROR - index error
+2023-12-06 15:21:18,487 - app - INFO - index info
+2023-12-06 15:21:18,487 - app - DEBUG - index debug
+2023-12-06 15:21:18,487 - app - ERROR - index error
+2023-12-06 15:29:07,792 - app - INFO - index info
+2023-12-06 15:29:07,793 - app - DEBUG - index debug
+2023-12-06 15:29:07,793 - app - ERROR - index error
+2023-12-06 16:19:28,465 - app - INFO - index info
+2023-12-06 16:19:28,466 - app - DEBUG - index debug
+2023-12-06 16:19:28,466 - app - ERROR - index error
+2023-12-07 14:11:07,644 - app - INFO - index info
+2023-12-07 14:11:07,644 - app - DEBUG - index debug
+2023-12-07 14:11:07,645 - app - ERROR - index error
+2023-12-07 14:11:42,149 - app - ERROR - index error
+2023-12-07 14:23:40,594 - app.audio_methods - INFO - info
+2023-12-07 14:23:40,595 - app.audio_methods - DEBUG - debug
+2023-12-07 14:23:40,595 - app.audio_methods - ERROR - error
+2023-12-07 14:23:40,595 - app.audio_methods - INFO - playaa
+2023-12-07 14:24:43,508 - app.audio_methods - INFO - info
+2023-12-07 14:24:43,509 - app.audio_methods - DEBUG - debug
+2023-12-07 14:24:43,510 - app.audio_methods - ERROR - error
+2023-12-07 14:24:43,511 - app.audio_methods - INFO - playaa
+2023-12-07 14:25:13,830 - app.audio_methods - ERROR - error
+2025-04-15 21:18:29,828 - app - ERROR - index error
+2025-04-15 21:24:43,639 - app - ERROR - index error

@@ -1,0 +1,5 @@
+<div id="checkurl" hx-get="{{ url_for('core.taskstatus', task_id=task_id, html=True) }}" hx-trigger="every 3s" hx-swap="outerHTML">
+  <div class="status">
+    <img src="{{ url_for('static', filename='puff.svg') }}" alt="Processing ...">
+  </div>
+</div>

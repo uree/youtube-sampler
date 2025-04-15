@@ -9,3 +9,4 @@ api/app/files/*
 api/app/logs/*
 venv/
 files/*
+.flaskenv
