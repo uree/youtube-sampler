@@ -11,15 +11,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 
-def lgt(beef):
-    logger.info("info")
-    logger.debug("debug")
-    logger.error("error")
-    logger.info(beef)
-
-    return beef+"+"+beef
-
-
 def segment_audio(filepath, segment_len, outname):
     """
     Split autio file into segments and delete original audio file.

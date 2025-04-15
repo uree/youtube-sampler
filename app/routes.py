@@ -16,7 +16,6 @@ import yt_dlp
 
 from .tasks import ytsampler
 from .ydl_options import ydl_opts
-from .audio_methods import lgt
 
 
 bp = Blueprint("core", __name__)
@@ -27,17 +26,7 @@ def interface_index():
     """
     Serve simple interface to interact with the API endpoints.
     """
-    current_app.logger.info("index info")
-    current_app.logger.debug("index debug")
-    current_app.logger.error("index error")
     return render_template("index.html")
-
-
-@bp.route("/logtest")
-def log_test():
-
-    beef = lgt("playaa")
-    return "<h1>"+beef+"</h1>"
 
 
 @bp.route("/extract", methods=["GET", "POST"])
