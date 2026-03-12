@@ -75,6 +75,7 @@
             type="text"
             name="url"
             v-model="form.url"
+            @input="shortenYouTubeUrl"
             placeholder="youtube URL"
           >
           <span class="error" v-if="errors.validUrl != 1">Must be a valid youtube url.</span>
@@ -240,6 +241,15 @@
                   'onStateChange': this.onPlayerStateChange
                 }
               });
+            }
+          },
+          shortenYouTubeUrl() {
+            if (this.form.url && this.form.url.startsWith("https://www.youtube.com")) {
+              const parts = this.form.url.split('watch?v=');
+              if (parts.length >= 2) {
+                const videoId = parts[1].split('&')[0];
+                this.form.url = parts[0] + 'watch?v=' + videoId;
+              }
             }
           }
         }
