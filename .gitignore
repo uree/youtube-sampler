@@ -12,3 +12,4 @@ files/*
 .flaskenv
 .venv/
 app/logs/*.log
+logs/*.log
