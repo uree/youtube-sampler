@@ -13,5 +13,7 @@ files/*
 .venv/
 app/logs/*.log
 logs/*.log
+logs/celery.log
+celery.log
 app/logs/celery.log
 app/logs/main.log
