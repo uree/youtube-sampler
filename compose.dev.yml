@@ -1,5 +1,5 @@
 services:
-  flask_api:
+  flask:
     environment:
       FLASK_DEBUG: "1"
     volumes:

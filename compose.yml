@@ -7,7 +7,7 @@ services:
       timeout: 3s
       retries: 5
 
-  flask_api:
+  flask:
     build: .
     container_name: youtube_sampler_api
     environment:

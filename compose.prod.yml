@@ -1,5 +1,5 @@
 services:
-  flask_api:
+  flask:
     restart: unless-stopped
 
   worker:
