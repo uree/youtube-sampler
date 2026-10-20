@@ -12,7 +12,6 @@ def segment_audio(filepath, segment_len, outname):
     """
     Split autio file into segments and delete original audio file.
     """
-    logger.debug("segment")
     logger.debug(filepath)
 
     audio = AudioSegment.from_file(filepath)
@@ -35,7 +34,6 @@ def cut_audio(filepath, start, end, outname):
     """
     Cut segment from and audio file an delete the original audio file.
     """
-    logger.debug("cut")
     logger.debug(filepath)
 
     try:
