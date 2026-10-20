@@ -172,7 +172,7 @@
             return ''
           },
           readyToPostToAPI() {
-            if (this.form.url !== null && this.form.start !== null && this.form.end !== null) {
+            if (this.form.url !== null) {
 
               if (!this.form.url.startsWith("https://www.youtube.com")) {
                 this.errors.validUrl = 0
@@ -181,7 +181,10 @@
                 this.errors.validUrl = 1
               }
 
-              if (this.form.start >= this.form.end) {
+              const hasStart = this.form.start !== null && this.form.start !== ''
+              const hasEnd = this.form.end !== null && this.form.end !== ''
+
+              if (hasStart !== hasEnd || (hasStart && this.form.start >= this.form.end)) {
                 this.errors.validEnd = 0
                 return 0
               } else {
@@ -193,10 +196,14 @@
             }
           },
           startInMs() {
-            return this.form.start*1000
+            return this.form.start === null || this.form.start === ''
+              ? ''
+              : this.form.start * 1000
           },
           endInMs() {
-            return this.form.end*1000
+            return this.form.end === null || this.form.end === ''
+              ? ''
+              : this.form.end * 1000
           }
         },
         mounted() {
@@ -208,10 +215,19 @@
         },
         methods: {
           onPlayerReady(event) {
-           event.target.seekTo(this.form.start);
+           event.target.seekTo(this.form.start || 0);
            event.target.playVideo();
           },
           onPlayerStateChange(event) {
+            if (this.form.start === null || this.form.start === '' ||
+                this.form.end === null || this.form.end === '') {
+              if (event.data === YT.PlayerState.ENDED) {
+                this.ytplayer.seekTo(0);
+                this.ytplayer.playVideo();
+              }
+              return
+            }
+
             if (event.data == YT.PlayerState.PLAYING) {
               var duration = this.form.end - this.form.start;
               setTimeout(this.restartVideoSection, duration * 1000);
@@ -223,6 +239,7 @@
           restartWithNewUrl() {
             console.log("new url")
             this.ytplayer.loadVideoById(this.videoId)
+            this.ytplayer.seekTo(this.form.start || 0)
             console.log(this.videoId)
           },
           createYtPlayer() {

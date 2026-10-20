@@ -40,7 +40,7 @@ def extract():
         end = request.args.get("end", None)
         current_app.logger.debug(f"{url} {start} {end}")
 
-        if None in (url, start, end):
+        if None in url:
             return make_response(
                 {"error": "Missing parameter. Provide url, start and end."}
             )

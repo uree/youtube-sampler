@@ -10,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @shared_task(bind=True)
-def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
+def ytsampler(self, url, ydl_opts, start=None, end=None, segment_len=0):
     """
     Download the youtube video/audio and call the postporcessing functions
     (to convert and segment or cut the audio).
@@ -23,7 +23,6 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
             info_dict = ydl.extract_info(url, download=True)
-            logger.debug("runnin")
             saved_mp3_path = info_dict["requested_downloads"][0]["filepath"].replace(
                 "/home/youtube_sampler/", ""
             )
@@ -36,9 +35,11 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
 
         title = info_dict.get("title", "johnaudidoe")
 
-    if segment:
+    if segment_len:
         sample_path = segment_audio(saved_mp3_path, segment_len, outname=title)
-    else:
+    elif start and end:
         sample_path = cut_audio(saved_mp3_path, start, end, outname=title)
+    else:
+        sample_path = saved_mp3_path
 
     return sample_path
