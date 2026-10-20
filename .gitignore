@@ -13,4 +13,3 @@ venv/
 files/*
 app/files/
 .flaskenv
-update.sh
