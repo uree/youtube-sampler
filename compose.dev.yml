@@ -1,0 +1,10 @@
+services:
+  flask_api:
+    environment:
+      FLASK_DEBUG: "1"
+    volumes:
+      - .:/home/youtube_sampler
+
+  worker:
+    volumes:
+      - .:/home/youtube_sampler

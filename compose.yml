@@ -1,0 +1,33 @@
+services:
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  flask_api:
+    build: .
+    container_name: youtube_sampler_api
+    environment:
+      PYTHONUNBUFFERED: 1
+      PYTHONIOENCODING: UTF-8
+    volumes:
+      - ./app/logs:/home/youtube_sampler/app/logs
+      - ./app/files:/home/youtube_sampler/app/files
+    ports:
+      - "420:420"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: celery -A run.celery_app worker --loglevel=INFO -f app/logs/celery.log
+    volumes:
+      - ./app/logs:/home/youtube_sampler/app/logs
+      - ./app/files:/home/youtube_sampler/app/files
+    depends_on:
+      redis:
+        condition: service_healthy

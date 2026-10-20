@@ -4,7 +4,18 @@ an api/tool using youtube_dl to extract audio segments from youtube clips and sa
 
 makes it easy to get audio from youtube into your sampler (or whatever)
 
-install docker and run ``` docker-compose up ```
+## Dev
+
+docker compose -f compose.yml -f compose.dev.yml up --build
+
+## Prod
+
+docker compose -f compose.yml -f compose.prod.yml up --build -d
+
+## To keep it up to date
+
+
+## API "Docs"
 
 the api has two endpoints
 
