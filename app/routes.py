@@ -1,22 +1,20 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 
+import yt_dlp
 from flask import (
     Blueprint,
-    send_file,
     current_app,
-    redirect,
-    url_for,
     make_response,
+    redirect,
+    render_template,
     request,
-    render_template
+    send_file,
+    url_for,
 )
-import yt_dlp
 
 from .tasks import ytsampler
 from .ydl_options import ydl_opts
-
 
 bp = Blueprint("core", __name__)
 
@@ -52,14 +50,14 @@ def extract():
         current_app.logger.debug("extracted")
 
         if not is_valid_link:
-            current_app.logger.debug("Invalid url: {}".format(url))
+            current_app.logger.debug(f"Invalid url: {url}")
             return make_response({"error": "Invalid url."}, 400)
 
         current_app.logger.debug("sampler")
         try:
             audio = ytsampler.apply_async(
                 args=[url, ydl_opts, start, end])
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             current_app.logger.debug("Something went wrong tasking celery.")
             current_app.logger.debug(repr(e))
 
@@ -78,18 +76,18 @@ def extract():
 
         if None in (url, start, end):
             return render_template(
-                "failure.html", message="Missing parameter. Provide url, start and end."  # noqa: E501
+                "failure.html", message="Missing parameter. Provide url, start and end."
             )
 
         try:
             yt_extractor = yt_dlp.extractor.get_info_extractor("Youtube")
             is_valid_link = yt_extractor.suitable(url)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             current_app.logger.debug("Error calling ty_dlp.")
             current_app.logger.debug(repr(e))
 
         if not is_valid_link:
-            current_app.logger.debug("Invalid url: {}".format(url))
+            current_app.logger.debug(f"Invalid url: {url}")
             return render_template("failure.html", message="Invalid url.")
 
         current_app.logger.debug("pre task")
@@ -98,11 +96,11 @@ def extract():
             audio = ytsampler.apply_async(
                 args=[url, ydl_opts, start, end])
             current_app.logger.debug(audio)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             current_app.logger.debug("Something went wrong tasking celery.")
             current_app.logger.debug(repr(e))
 
-        return render_template("check_status.html", task_id=audio.id, html=True)  # noqa: E501
+        return render_template("check_status.html", task_id=audio.id, html=True)
 
 
 @bp.route("/segment")
@@ -189,8 +187,8 @@ def download(path):
 
     try:
         os.rmdir(folder)
-    except Exception as e:
-        current_app.logger.error(f"Error removing temp folder: {repr(e)}")
+    except Exception as e:  # noqa: BLE001
+        current_app.logger.error(f"Error removing temp folder: {e!r}")
 
     return send_file(
         return_data,

@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
 import logging
 import os
 
-import ffmpeg  # noqa
 from pydub import AudioSegment
 from pydub.utils import make_chunks
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -24,7 +21,7 @@ def segment_audio(filepath, segment_len, outname):
     segnames = []
 
     for i, seg in enumerate(segments):
-        segname = filepath[:-4] + "_segment{0}.mp3".format(i)
+        segname = filepath[:-4] + f"_segment{i}.mp3"
         seg.export(segname, format="mp3")
         segnames.append(segname)
 
@@ -43,14 +40,14 @@ def cut_audio(filepath, start, end, outname):
 
     try:
         audio = AudioSegment.from_file(filepath)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failure segmenting audio: {e}")
 
     sample = audio[int(start): int(end)]
     sample_path = filepath[:-4] + "_sample.mp3"
     try:
         sample.export(sample_path, format="mp3")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failure exporting mp3: {e}")
 
     # delete whole audio

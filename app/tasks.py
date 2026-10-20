@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
 import logging
 
-from celery import shared_task
 import yt_dlp
-from .audio_methods import segment_audio, cut_audio
+from celery import shared_task
+
+from .audio_methods import cut_audio, segment_audio
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
 @shared_task(bind=True)
-def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):  # noqa: E501
+def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):
     """
     Download the youtube video/audio and call the postporcessing functions
     (to convert and segment or cut the audio).
@@ -24,13 +24,13 @@ def ytsampler(self, url, ydl_opts, start, end, segment_len=0, segment=False):  #
         try:
             info_dict = ydl.extract_info(url, download=True)
             logger.debug("runnin")
-            saved_mp3_path = info_dict["requested_downloads"][0]["filepath"].replace(  # noqa: E501
+            saved_mp3_path = info_dict["requested_downloads"][0]["filepath"].replace(
                 "/home/youtube_sampler/", ""
             )
             logger.debug(saved_mp3_path)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(
-                "yt_dlp failure with the following url: {}".format(url))
+                f"yt_dlp failure with the following url: {url}")
             logger.error(repr(e))
             return False
 

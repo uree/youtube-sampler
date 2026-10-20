@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 
 from celery import Celery, Task
@@ -18,7 +17,7 @@ def create_app():
 
     app.logger.setLevel(logging.ERROR)
     logging.basicConfig(filename="app/logs/main.log",
-                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")  # noqa: E501
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     from . import routes
     app.register_blueprint(routes.bp, url_prefix="/")
